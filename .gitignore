@@ -197,3 +197,8 @@ huggingface/
 
 **.bash
 run_ai.bash
+test_journal_signature_fix.py
+test_specific_error_fix.py
+test_log_summarization_fix.py
+test_all_journal_methods.py
+

@@ -2,7 +2,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Literal, Optional
+from typing import Literal, Optional, List, Dict
 import copy
 import os
 import json
@@ -417,7 +417,7 @@ class Journal:
         """Return a list of all metric values in the journal."""
         return [n.metric for n in self.nodes]
 
-    def get_best_node(self, only_good=True, use_val_metric_only=False) -> None | Node:
+    def get_best_node(self, only_good=True, use_val_metric_only=False, model: str = "deepseek-chat") -> None | Node:
         """Return the best solution found so far."""
         if only_good:
             nodes = self.good_nodes
@@ -471,7 +471,7 @@ class Journal:
                 system_message=prompt,
                 user_message=None,
                 func_spec=node_selection_spec,
-                model="gpt-4o",
+                model=model,
                 temperature=0.3,
             )
 
@@ -495,7 +495,7 @@ class Journal:
             logger.warning("Falling back to metric-based selection")
             return max(nodes, key=lambda n: n.metric)
 
-    def generate_summary(self, include_code: bool = False) -> str:
+    def generate_summary(self, include_code: bool = False, model: str = "deepseek-chat") -> str:
         """Generate a summary of the research progress using LLM, including both successes and failures."""
         if not self.nodes:
             return "No experiments conducted yet."
@@ -535,7 +535,7 @@ class Journal:
                 "2. Common failure patterns and pitfalls to avoid\n"
                 "3. Specific recommendations for future experiments based on both successes and failures"
             ),
-            model="gpt-4o",
+            model=model,
             temperature=0.3,
         )
 
@@ -556,7 +556,7 @@ class Journal:
         """Convert journal to a JSON-serializable dictionary"""
         return {"nodes": [node.to_dict() for node in self.nodes]}
 
-    def save_experiment_notes(self, workspace_dir: str, stage_name: str):
+    def save_experiment_notes(self, workspace_dir: str, stage_name: str, model: str = "deepseek-chat"):
         """Save experimental notes and summaries to files"""
         notes_dir = os.path.join(workspace_dir, "experiment_notes")
         os.makedirs(notes_dir, exist_ok=True)
@@ -582,16 +582,19 @@ class Journal:
                 ) as f:
                     json.dump(summary, f, indent=2)
 
+        # Get best node once and reuse
+        best_node = self.get_best_node(model=model)
+        
         # Generate and save stage summary using the already collected summaries
         summary_prompt = {
             "Introduction": "Synthesize the experimental findings from this stage",
             "Node Summaries": node_summaries,
             "Best Node": (
                 {
-                    "id": self.get_best_node().id,
-                    "metric": str(self.get_best_node().metric),
+                    "id": best_node.id,
+                    "metric": str(best_node.metric),
                 }
-                if self.get_best_node()
+                if best_node
                 else None
             ),
         }
@@ -599,7 +602,7 @@ class Journal:
         stage_summary = query(
             system_message=summary_prompt,
             user_message="Generate a comprehensive summary of the experimental findings in this stage",
-            model="gpt-4",
+            model=model,
             temperature=0.3,
         )
 

@@ -2092,17 +2092,17 @@ def evaluate_genome(genome):
     genome.fitness = 4.0 - error
     return genome.fitness
 
-def run_xor_experiment(num_gens=100, pop_size=100):
+def run_xor_experiment(num_gens=150, pop_size=100):
     config = NEATConfig(
         genome_shape=(3, 1),
         population_size=pop_size,
-        add_node_mutation_prob=0.05,
-        add_conn_mutation_prob=0.08,
-        sigma=0.1,
+        add_node_mutation_prob=0.15,
+        add_conn_mutation_prob=0.15,
+        sigma=0.05,
         perturb_prob=0.8,
         reset_prob=0.1,
         species_threshold=3.0,
-        num_elites=1,
+        num_elites=20,
         selection_share=0.2,
     )
     print(config)
