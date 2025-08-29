@@ -8,10 +8,10 @@ from .journal import Node, Journal
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, parent_dir)
-from ai_scientist.llm import get_response_from_llm, extract_json_between_markers
+from ai_scientist.llm import get_response_from_llm, extract_json_between_markers, create_client
 
-client = openai.OpenAI()
-model = "gpt-4o-2024-08-06"
+# Default model - client will be created on demand
+default_model = "deepseek-reasoner"
 
 report_summarizer_sys_msg = """You are an expert machine learning researcher.
 You are given multiple experiment logs, each representing a node in a stage of exploring scientific ideas and implementations.
@@ -294,7 +294,13 @@ def annotate_history(journal):
             node.overall_plan = node.plan
 
 
-def overall_summarize(journals):
+def overall_summarize(journals, model=None, client=None):
+    # Use default model and client if not provided
+    if model is None:
+        model = default_model
+    if client is None:
+        client, _ = create_client(model)
+    
     from concurrent.futures import ThreadPoolExecutor
 
     def process_stage(idx, stage_tuple):

@@ -212,12 +212,16 @@ def perform_experiments_bfts(config_path: str):
 
     if cfg.generate_report:
         print("Generating final report from all stages...")
+        # Use the configured model for report generation
+        from ai_scientist.llm import create_client
+        report_client, report_model = create_client(cfg.report.model)
+        
         (
             draft_summary,
             baseline_summary,
             research_summary,
             ablation_summary,
-        ) = overall_summarize(manager.journals.items())
+        ) = overall_summarize(manager.journals.items(), model=report_model, client=report_client)
         draft_summary_path = cfg.log_dir / "draft_summary.json"
         baseline_summary_path = cfg.log_dir / "baseline_summary.json"
         research_summary_path = cfg.log_dir / "research_summary.json"

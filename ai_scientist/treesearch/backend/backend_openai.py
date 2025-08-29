@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import os
 
 from .utils import FunctionSpec, OutputType, opt_messages_to_list, backoff_create
 from funcy import notnone, once, select_values
@@ -10,6 +11,7 @@ from rich import print
 logger = logging.getLogger("ai-scientist")
 
 _client: openai.OpenAI = None  # type: ignore
+_current_model: str = None  # track current model to recreate client if needed
 
 OPENAI_TIMEOUT_EXCEPTIONS = (
     openai.RateLimitError,
@@ -19,10 +21,32 @@ OPENAI_TIMEOUT_EXCEPTIONS = (
 )
 
 
-@once
-def _setup_openai_client():
-    global _client
-    _client = openai.OpenAI(max_retries=0)
+def _setup_openai_client(model: str = None):
+    """Setup OpenAI client based on the model being used"""
+    global _client, _current_model
+    
+    # Only recreate client if model has changed or client doesn't exist
+    if _client is None or model != _current_model:
+        if model and ("deepseek" in model):
+            # Use DeepSeek API
+            deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY")
+            if not deepseek_api_key:
+                raise ValueError(
+                    "DEEPSEEK_API_KEY environment variable is required for DeepSeek models. "
+                    "Please set it with: export DEEPSEEK_API_KEY='your_api_key_here'"
+                )
+            _client = openai.OpenAI(
+                api_key=deepseek_api_key,
+                base_url="https://api.deepseek.com",
+                max_retries=0
+            )
+            logger.info(f"Setup DeepSeek client for model: {model}")
+        else:
+            # Use default OpenAI API
+            _client = openai.OpenAI(max_retries=0)
+            logger.info(f"Setup OpenAI client for model: {model}")
+        
+        _current_model = model
 
 
 def query(
@@ -31,7 +55,8 @@ def query(
     func_spec: FunctionSpec | None = None,
     **model_kwargs,
 ) -> tuple[OutputType, float, int, int, dict]:
-    _setup_openai_client()
+    model = model_kwargs.get("model", "")
+    _setup_openai_client(model)
     filtered_kwargs: dict = select_values(notnone, model_kwargs)  # type: ignore
 
     messages = opt_messages_to_list(system_message, user_message)
