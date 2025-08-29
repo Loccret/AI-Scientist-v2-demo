@@ -10,7 +10,18 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
 sys.path.insert(0, parent_dir)
 from ai_scientist.llm import get_response_from_llm, extract_json_between_markers
 
-client = openai.OpenAI()
+client(ai_scientist) thunderbird@ThunderBird:~/sakana/AI-Scientist-v2-demo$ bash run_ai.bash 
+Traceback (most recent call last):
+  File "/home/thunderbird/sakana/AI-Scientist-v2-demo/launch_scientist_bfts.py", line 13, in <module>
+    from ai_scientist.treesearch.perform_experiments_bfts_with_agentmanager import (
+  File "/home/thunderbird/sakana/AI-Scientist-v2-demo/ai_scientist/treesearch/perform_experiments_bfts_with_agentmanager.py", line 28, in <module>
+    from .log_summarization import overall_summarize
+  File "/home/thunderbird/sakana/AI-Scientist-v2-demo/ai_scientist/treesearch/log_summarization.py", line 13, in <module>
+    client = openai.OpenAI()
+             ^^^^^^^^^^^^^^^
+  File "/home/thunderbird/miniforge3/envs/ai_scientist/lib/python3.11/site-packages/openai/_client.py", line 132, in __init__
+    raise OpenAIError(
+openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable= openai.OpenAI()
 model = "gpt-4o-2024-08-06"
 
 report_summarizer_sys_msg = """You are an expert machine learning researcher.

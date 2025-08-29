@@ -18,7 +18,6 @@ from ai_scientist.llm import (
 from ai_scientist.perform_vlm_review import generate_vlm_img_review
 from ai_scientist.vlm import create_client as create_vlm_client
 
-
 def remove_accents_and_clean(s):
     """Clean a string for use as a LaTeX identifier."""
     # Normalize to separate accents

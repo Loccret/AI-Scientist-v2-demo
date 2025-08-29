@@ -33,8 +33,6 @@ AVAILABLE_LLMS = [
     # DeepSeek Models
     "deepseek-coder-v2-0724",
     "deepcoder-14b",
-    'deepseek-chat',
-    'deepseek-reasoner',
     # Llama 3 models
     "llama3.1-405b",
     # Anthropic Claude models via Amazon Bedrock
@@ -66,7 +64,7 @@ AVAILABLE_LLMS = [
         anthropic.RateLimitError,
     ),
 )
-# @track_token_usage  # Temporarily disabled
+@track_token_usage
 def get_batch_responses_from_llm(
     prompt,
     client,
@@ -150,7 +148,6 @@ def get_batch_responses_from_llm(
         new_msg_history = [
             new_msg_history + [{"role": "assistant", "content": c}] for c in content
         ]
-    # DeepSeek models don't support n > 1, so they fall back to the loop below
     else:
         content, new_msg_history = [], []
         for _ in range(n_responses):
@@ -374,36 +371,6 @@ def get_response_from_llm(
         )
         content = response.choices[0].message.content
         new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
-    elif model == "deepseek-chat":
-        new_msg_history = msg_history + [{"role": "user", "content": msg}]
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-                {"role": "system", "content": system_message},
-                *new_msg_history,
-            ],
-            temperature=temperature,
-            max_tokens=MAX_NUM_TOKENS,
-            n=1,
-            stop=None,
-        )
-        content = response.choices[0].message.content
-        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
-    elif model == "deepseek-reasoner":
-        new_msg_history = msg_history + [{"role": "user", "content": msg}]
-        response = client.chat.completions.create(
-            model="deepseek-reasoner",
-            messages=[
-                {"role": "system", "content": system_message},
-                *new_msg_history,
-            ],
-            temperature=temperature,
-            max_tokens=MAX_NUM_TOKENS,
-            n=1,
-            stop=None,
-        )
-        content = response.choices[0].message.content
-        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
     else:
         raise ValueError(f"Model {model} not supported.")
 
@@ -501,24 +468,6 @@ def create_client(model) -> tuple[Any, str]:
             openai.OpenAI(
                 api_key=os.environ["GEMINI_API_KEY"],
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            ),
-            model,
-        )
-    elif model == "deepseek-chat":
-        print(f"Using DeepSeek API with {model}.")
-        return (
-            openai.OpenAI(
-                api_key=os.environ["DEEPSEEK_API_KEY"],
-                base_url="https://api.deepseek.com",
-            ),
-            model,
-        )
-    elif model == "deepseek-reasoner":
-        print(f"Using DeepSeek API with {model}.")
-        return (
-            openai.OpenAI(
-                api_key=os.environ["DEEPSEEK_API_KEY"],
-                base_url="https://api.deepseek.com",
             ),
             model,
         )
