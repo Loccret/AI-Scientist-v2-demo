@@ -124,11 +124,11 @@ def perform_experiments_bfts(config_path: str):
                 "buggy_nodes": len(journal.buggy_nodes),
                 "good_nodes": len(journal.good_nodes),
                 "best_metric": (
-                    str(journal.get_best_node().metric)
-                    if journal.get_best_node()
+                    str(journal.get_best_node(model=cfg.agent.feedback.model).metric)
+                    if journal.get_best_node(model=cfg.agent.feedback.model)
                     else "None"
                 ),
-                "current_findings": journal.generate_summary(include_code=False),
+                "current_findings": journal.generate_summary(include_code=False, model=cfg.agent.feedback.model),
             }
 
             with open(notes_dir / "stage_progress.json", "w") as f:

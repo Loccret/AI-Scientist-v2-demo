@@ -2069,7 +2069,7 @@ class ParallelAgent:
             else:
                 node_data_list.append(None)  # None means new draft
 
-        memory_summary = self.journal.generate_summary(include_code=False)
+        memory_summary = self.journal.generate_summary(include_code=False, model=self.cfg.agent.feedback.model)
 
         print("Submitting tasks to process pool")
         futures = []
