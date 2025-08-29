@@ -262,7 +262,7 @@ Ensure the JSON is valid and properly formatted, as it will be automatically par
 """
 
 
-def annotate_history(journal):
+def annotate_history(journal, client, model):
     for node in journal.nodes:
         if node.parent:
             max_retries = 3
@@ -305,7 +305,7 @@ def overall_summarize(journals, model=None, client=None):
 
     def process_stage(idx, stage_tuple):
         stage_name, journal = stage_tuple
-        annotate_history(journal)
+        annotate_history(journal, client, model)
         if idx in [1, 2]:
             best_node = journal.get_best_node()
             # get multi-seed results and aggregater node
