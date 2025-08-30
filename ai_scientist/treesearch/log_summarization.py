@@ -355,7 +355,15 @@ def overall_summarize(journals, model=None, client=None):
                 total=len(list(journals)),
             )
         )
-        draft_summary, baseline_summary, research_summary, ablation_summary = results
+        
+        # Handle cases where there are fewer than 4 stages
+        if len(results) < 4:
+            # Pad with None values for missing stages
+            while len(results) < 4:
+                print("Warning!!! Fewer than 4 stages found. Padding with None.")
+                results.append(None)
+        
+        draft_summary, baseline_summary, research_summary, ablation_summary = results[:4]
 
     return draft_summary, baseline_summary, research_summary, ablation_summary
 

@@ -134,6 +134,9 @@ def get_available_gpus(gpu_ids=None):
 def find_pdf_path_for_review(idea_dir):
     pdf_files = [f for f in os.listdir(idea_dir) if f.endswith(".pdf")]
     reflection_pdfs = [f for f in pdf_files if "reflection" in f]
+    
+    pdf_path = None  # Initialize pdf_path
+    
     if reflection_pdfs:
         # First check if there's a final version
         final_pdfs = [f for f in reflection_pdfs if "final" in f.lower()]
@@ -155,6 +158,12 @@ def find_pdf_path_for_review(idea_dir):
             else:
                 # Fall back to the first reflection PDF if no numbers found
                 pdf_path = osp.join(idea_dir, reflection_pdfs[0])
+    else:
+        # No reflection PDFs found, look for any PDF file
+        if pdf_files:
+            # Use the first available PDF file
+            pdf_path = osp.join(idea_dir, pdf_files[0])
+    
     return pdf_path
 
 
@@ -275,6 +284,7 @@ if __name__ == "__main__":
                 writeup_success = perform_writeup(
                     base_folder=idea_dir,
                     big_model=args.model_writeup,
+                    small_model='gpt-4o-2024-05-13',  # Use citation model for VLM tasks
                     page_limit=8,
                     citations_text=citations_text,
                 )
@@ -282,6 +292,7 @@ if __name__ == "__main__":
                 writeup_success = perform_icbinb_writeup(
                     base_folder=idea_dir,
                     big_model=args.model_writeup,
+                    small_model='gpt-4o-2024-05-13',  # Use citation model for VLM tasks
                     page_limit=4,
                     citations_text=citations_text,
                 )
@@ -296,7 +307,7 @@ if __name__ == "__main__":
     if not args.skip_review and not args.skip_writeup:
         # Perform paper review if the paper exists
         pdf_path = find_pdf_path_for_review(idea_dir)
-        if os.path.exists(pdf_path):
+        if pdf_path and os.path.exists(pdf_path):
             print("Paper found at: ", pdf_path)
             paper_content = load_paper(pdf_path)
             client, client_model = create_client(args.model_review)
