@@ -75,9 +75,11 @@ def create_hybrid_writeup(experiment_dir,
             small_model="gpt-4o-2024-05-13", # OpenAI for VLM tasks and citations
             page_limit=4,                     # ICBINB format
             citations_text=citations_text,
-            vlm_bypass=False,                 # Enable VLM with OpenAI
             n_writeup_reflections=2           # Reduced reflections for efficiency
         )
+        
+        print(f"🔍 DEBUG: perform_writeup returned: {writeup_success}")
+        
     except Exception as e:
         print(f"❌ Exception during writeup: {e}")
         import traceback

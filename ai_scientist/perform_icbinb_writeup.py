@@ -721,6 +721,10 @@ def filter_experiment_summaries(exp_summaries, step_name):
     filtered_summaries = {}
     for stage_name in exp_summaries.keys():
         if stage_name in {"BASELINE_SUMMARY", "RESEARCH_SUMMARY"}:
+            # Skip if the stage summary is None (failed experiments)
+            if exp_summaries[stage_name] is None:
+                filtered_summaries[stage_name] = None
+                continue
             filtered_summaries[stage_name] = {}
             for key in exp_summaries[stage_name].keys():
                 if key in {"best node"}:
@@ -731,6 +735,10 @@ def filter_experiment_summaries(exp_summaries, step_name):
                                 exp_summaries[stage_name][key][node_key]
                             )
         elif stage_name == "ABLATION_SUMMARY" and step_name == "plot_aggregation":
+            # Skip if the stage summary is None (failed experiments)
+            if exp_summaries[stage_name] is None:
+                filtered_summaries[stage_name] = None
+                continue
             filtered_summaries[stage_name] = {}
             for ablation_summary in exp_summaries[stage_name]:
                 filtered_summaries[stage_name][ablation_summary["ablation_name"]] = {}
@@ -1002,12 +1010,43 @@ def perform_writeup(
             print_debug=False,
         )
 
-        latex_code_match = re.search(r"```latex(.*?)```", response, re.DOTALL)
+        # Try multiple patterns to extract LaTeX code block
+        latex_code_match = None
+        patterns = [
+            r"```latex\s*(.*?)\s*```",  # Standard pattern with optional whitespace
+            r"```latex\n(.*?)\n```",    # Pattern with newlines
+            r"```latex(.*?)```",        # Original pattern
+            r"```\s*latex\s*(.*?)\s*```", # Pattern with spaces around 'latex'
+        ]
+        
+        for pattern in patterns:
+            latex_code_match = re.search(pattern, response, re.DOTALL)
+            if latex_code_match:
+                break
+        
         if not latex_code_match:
-            return False
-        updated_latex_code = latex_code_match.group(1).strip()
-        with open(writeup_file, "w") as f:
-            f.write(updated_latex_code)
+            print("❌ DEBUG: No LaTeX code block found in LLM response")
+            print(f"🔍 DEBUG: Response length: {len(response)}")
+            print(f"🔍 DEBUG: First 500 chars of response: {response[:500]}")
+            print(f"🔍 DEBUG: Last 500 chars of response: {response[-500:]}")
+            # Try to extract content between first \documentclass and end of response as fallback
+            doc_start = response.find("\\documentclass")
+            if doc_start != -1:
+                print("🔄 DEBUG: Attempting fallback extraction from \\documentclass")
+                latex_content = response[doc_start:].strip()
+                # Remove any trailing ``` if present
+                if latex_content.endswith("```"):
+                    latex_content = latex_content[:-3].strip()
+                with open(writeup_file, "w") as f:
+                    f.write(latex_content)
+                print("✅ DEBUG: Fallback LaTeX extraction successful")
+            else:
+                return False
+        else:
+            print("✅ DEBUG: LaTeX code block found in LLM response")
+            updated_latex_code = latex_code_match.group(1).strip()
+            with open(writeup_file, "w") as f:
+                f.write(updated_latex_code)
 
         # Multiple reflection loops on the final LaTeX
         for i in range(n_writeup_reflections):
