@@ -336,7 +336,7 @@ def perform_graph_abstract(
         )
 
         response, msg_history = get_response_from_llm(
-            msg=combined_prompt,
+            prompt=combined_prompt,
             client=big_client,
             model=big_client_model,
             system_message=graphical_abstract_system_message,
@@ -396,7 +396,7 @@ If you believe you are done, simply say: "I am done".
 """
 
             reflection_response, msg_history = get_response_from_llm(
-                msg=reflection_prompt,
+                prompt=reflection_prompt,
                 client=big_client,
                 model=big_client_model,
                 system_message=graphical_abstract_system_message,
