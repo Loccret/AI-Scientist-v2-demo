@@ -153,7 +153,9 @@ CRITICAL REQUIREMENTS:
 5. Write in a scholarly, technical tone appropriate for a machine learning venue
 6. Ensure the content flows naturally from the previous sections
 7. Include specific results and findings from the experimental data
-8. Return ONLY the requested LaTeX code with no markdown formatting or explanations"""
+8. Return ONLY the requested LaTeX code with no markdown formatting or explanations
+9. NEVER use \\\\begin{{LaTeX}} or \\\\end{{LaTeX}} environments - these are invalid LaTeX constructs
+10. Use proper LaTeX section commands like \\\\section{{}}, \\\\subsection{{}}, etc. instead"""
 
     prompt = f"Generate the {section_name} section based on the experimental context and data provided. Ensure it integrates seamlessly with the existing document structure."
 
@@ -174,6 +176,11 @@ CRITICAL REQUIREMENTS:
     elif "```" in response:
         # Remove any code block markers
         response = re.sub(r"```\w*\n?", "", response).strip()
+    
+    # Remove any accidentally generated invalid LaTeX environments
+    import re
+    response = re.sub(r'\\begin\{LaTeX\}\s*', '', response)
+    response = re.sub(r'\\end\{LaTeX\}\s*', '', response)
     
     return response
 
